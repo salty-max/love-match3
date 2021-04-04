@@ -107,6 +107,13 @@ function PlayState:update(dt)
         })
     end
 
+    if self.timer <= 0 then
+        gSounds['game-over']:play()
+        gStateMachine:change('game-over', {
+            score = self.score
+        })
+    end
+
     Timer.update(dt)
 end
 
@@ -114,6 +121,7 @@ function PlayState:calculateMatches()
     -- reset selection
     self.highlightedTile = nil
 
+    -- computre matches
     local matches = self.board:calculateMatches()
 
     if matches then
@@ -125,10 +133,13 @@ function PlayState:calculateMatches()
             self.score = self.score + #match * 50
         end
 
+        -- remove matched tiles
         self.board:removeMatches()
 
+        -- get replacement tiles
         local tilesToCollapse = self.board:getFallingTiles()
 
+        -- animate the fall of tiles
         Timer.tween(0.25, tilesToCollapse):finish(function()
             self:calculateMatches()
         end)
