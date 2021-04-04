@@ -39,6 +39,7 @@ function love.load()
     backgroundX = 0
 
     love.keyboard.keysPressed = {}
+    love.mouse.buttonsClicked = {}
 end
 
 function love.resize(w, h)
@@ -53,8 +54,16 @@ function love.keypressed(key)
     end
 end
 
+function love.mousepressed(x, y, button)
+    love.mouse.buttonsClicked[button] = true
+end
+
 function love.keyboard.wasPressed(key)
     return love.keyboard.keysPressed[key]
+end
+
+function love.mouse.wasClicked(button)
+    return love.mouse.buttonsClicked[button]
 end
 
 function love.update(dt)
@@ -69,6 +78,7 @@ function love.update(dt)
     gStateMachine:update(dt)
 
     love.keyboard.keysPressed = {}
+    love.mouse.buttonsClicked = {}
 end
 
 function love.draw()

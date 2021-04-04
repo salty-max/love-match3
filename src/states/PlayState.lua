@@ -46,7 +46,30 @@ end
 function PlayState:update(dt)
 
     if self.canInput then
-        if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
+        -- cursor movement
+        if love.keyboard.wasPressed('up') then
+            self.boardHighlightY = math.max(0, self.boardHighlightY - 1)
+            gSounds['select']:play()
+        elseif love.keyboard.wasPressed('down') then
+            self.boardHighlightY = math.min(7, self.boardHighlightY + 1)
+            gSounds['select']:play()
+        elseif love.keyboard.wasPressed('left') then
+            self.boardHighlightX = math.max(0, self.boardHighlightX - 1)
+            gSounds['select']:play()
+        elseif love.keyboard.wasPressed('right') then
+            self.boardHighlightX = math.min(7, self.boardHighlightX + 1)
+            gSounds['select']:play()
+        end
+
+        if love.mouse.wasClicked(1) then
+            local mousePos = self:getMouseGridPos()
+            if mousePos then
+                self.boardHighlightX = mousePos['x']
+                self.boardHighlightY = mousePos['y']
+            end
+        end
+
+        if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') or love.mouse.wasClicked(1) then
             -- shift highlight position to match table index
             local x = self.boardHighlightX + 1
             local y = self.boardHighlightY + 1
@@ -75,21 +98,6 @@ function PlayState:update(dt)
                     end
                 end)
             end
-        end
-
-        -- cursor movement
-        if love.keyboard.wasPressed('up') then
-            self.boardHighlightY = math.max(0, self.boardHighlightY - 1)
-            gSounds['select']:play()
-        elseif love.keyboard.wasPressed('down') then
-            self.boardHighlightY = math.min(7, self.boardHighlightY + 1)
-            gSounds['select']:play()
-        elseif love.keyboard.wasPressed('left') then
-            self.boardHighlightX = math.max(0, self.boardHighlightX - 1)
-            gSounds['select']:play()
-        elseif love.keyboard.wasPressed('right') then
-            self.boardHighlightX = math.min(7, self.boardHighlightX + 1)
-            gSounds['select']:play()
         end
     end
 
@@ -160,6 +168,20 @@ function PlayState:calculateMatches()
     end
 end
 
+function PlayState:getMouseGridPos()
+    local mouseX, mouseY = Push:toGame(love.mouse.getPosition())
+    mouseX = mouseX - self.board.x
+    mouseY = mouseY - self.board.y
+    mouseX = math.floor(mouseX / 32)
+    mouseY = math.floor(mouseY / 32)
+    if mouseX >= 0 and mouseY >= 0 and mouseX <= 7 and mouseY <= 7 then
+        return {
+            ['x'] = mouseX,
+            ['y'] = mouseY
+        }
+    end
+end
+
 function PlayState:render()
     self.board:render()
 
@@ -190,7 +212,7 @@ function PlayState:render()
     love.graphics.printf('Score: ' .. tostring(self.score), 24, 48, 178, 'center')
     love.graphics.printf('Goal: ' .. tostring(self.scoreGoal), 24, 72, 178, 'center')
     love.graphics.printf('Time left: ' .. tostring(self.timer), 24, 96, 178, 'center')
-    
+
     if self.waitForReset then
         love.graphics.setColor(56/255, 56/255, 56/255, 234/255)
         love.graphics.rectangle('fill', BOARD_OFFSET_X + 32, VIRTUAL_HEIGHT / 2 - 32, 192, 48, 4)
@@ -199,6 +221,9 @@ function PlayState:render()
         love.graphics.setFont(gFonts['medium'])
         love.graphics.printf('No possible match!', BOARD_OFFSET_X + 40, VIRTUAL_HEIGHT / 2 - 16, 176, 'center')
     end
+
+    love.graphics.print(self.boardHighlightX, 5, 5)
+    love.graphics.print(self.boardHighlightY, 5, 20)
 end
 
 -- remove timer to avoid wierd behavior with alarm sound
