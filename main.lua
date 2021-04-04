@@ -18,10 +18,6 @@ function love.load()
     -- seed the RNG
     math.randomseed(os.time())
 
-    -- set music to loop and start
-    gSounds['music']:setLooping(true)
-    gSounds['music']:play()
-
     love.audio.setVolume(0.1)
 
     gStateMachine = StateMachine {

@@ -54,6 +54,10 @@ function StartState:init()
 
     -- pause input during animation
     self.pauseInput = false
+
+    -- set music to loop and start
+    gSounds['music3']:setLooping(true)
+    gSounds['music3']:play()
 end
 
 function StartState:update(dt)
@@ -76,7 +80,8 @@ function StartState:update(dt)
                     [self] = { transitionAlpha = 1 }
                 }):finish(function()
                     gStateMachine:change('begin-game', {
-                        level = 1
+                        level = 1,
+                        music = 3
                     })
 
                     -- remove color timer

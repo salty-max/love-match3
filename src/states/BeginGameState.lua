@@ -16,11 +16,13 @@ end
 function BeginGameState:enter(params)
     self.level = params.level
     self.score = params.score
+    self.music = params.music
 
     self.board = Board(self.level, VIRTUAL_WIDTH / 2 - 32, 16)
-    
-    -- reset board until there is at least one possible successful swap
-    self.board:checkPossibleMatches()
+
+    gSounds['music' .. tostring(self.music)]:stop()
+    gSounds['music' .. tostring(math.random(3))]:setLooping(true)
+    gSounds['music' .. tostring(math.random(3))]:play()
 
     Timer.tween(1, {
         [self] = { transitionAlpha = 0 }

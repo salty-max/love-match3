@@ -18,6 +18,7 @@ function PlayState:init()
 
     self.timer = 60
     self.canInput = true
+    self.waitForReset = false
 
     Timer.every(0.5, function()
         self.rectHighlighted = not self.rectHighlighted
@@ -36,9 +37,10 @@ function PlayState:enter(params)
     self.level = params.level
     self.board = params.board or Board(self.level, VIRTUAL_WIDTH / 2 - 32, 16)
     self.score = params.score or 0
+    self.music = params.music
 
     -- score to reach to get to the next level
-    self.scoreGoal = self.level * 1.25 * 1000
+    self.scoreGoal = self.level * 2 * 1000
 end
 
 function PlayState:update(dt)
@@ -72,8 +74,6 @@ function PlayState:update(dt)
                         self:calculateMatches()
                     end
                 end)
-
-                self.board:checkPossibleMatches()
             end
         end
 
@@ -123,10 +123,13 @@ function PlayState:calculateMatches()
 
         if self.score >= self.scoreGoal then
             gSounds['next-level']:play()
-            gStateMachine:change('begin-game', {
-                level = self.level + 1,
-                score = 0
-            })
+            Timer.after(1, function()
+                gStateMachine:change('begin-game', {
+                    level = self.level + 1,
+                    score = 0,
+                    music = self.music
+                })
+            end)
         end
 
         -- add time for each match
@@ -146,6 +149,13 @@ function PlayState:calculateMatches()
         end)
 
     else
+        if not self.board:checkPossibleMatches() then
+            self.waitForReset = true
+            Timer.after(2, function()
+                self.board:initializeBoard()
+                self.waitForReset = false
+            end)
+        end
         self.canInput = true
     end
 end
@@ -180,6 +190,15 @@ function PlayState:render()
     love.graphics.printf('Score: ' .. tostring(self.score), 24, 48, 178, 'center')
     love.graphics.printf('Goal: ' .. tostring(self.scoreGoal), 24, 72, 178, 'center')
     love.graphics.printf('Time left: ' .. tostring(self.timer), 24, 96, 178, 'center')
+
+    if self.waitForReset then
+        love.graphics.setColor(56/255, 56/255, 56/255, 234/255)
+        love.graphics.rectangle('fill', BOARD_OFFSET_X + 16, VIRTUAL_HEIGHT / 2 - 24, 186, 48, 4)
+
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setFont(gFonts['medium'])
+        love.graphics.printf('No possible match!', BOARD_OFFSET_X + 8, VIRTUAL_HEIGHT / 2, 178, 'center')
+    end
 end
 
 -- remove timer to avoid wierd behavior with alarm sound

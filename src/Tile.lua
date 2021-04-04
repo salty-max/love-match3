@@ -17,7 +17,7 @@ function Tile:init(x, y, color, variety, shiny)
     self.variety = variety
     self.shiny = shiny
     self.blink = false
-    self.score = 50 * self.variety
+    self.score = 50 + (5 * self.variety)
 
     Timer.every(0.3, function()
         self.blink = not self.blink

@@ -52,7 +52,7 @@ function Board:initializeBoard()
     end
 
     -- reinitialize board until there is no matches at startup
-    while self:calculateMatches() do
+    while self:calculateMatches() or not self:checkPossibleMatches() do
         self:initializeBoard()
     end
 end
@@ -82,7 +82,11 @@ function Board:checkPossibleMatches()
     local hasMatch = false
 
     for y = 1, 8 do
+        if hasMatch then break end
+
         for x = 1, 8 do
+            if hasMatch then break end
+            
             local tile = self.tiles[y][x]
             -- if tile to swap is not off grid
             if x + 1 <= 8 then
@@ -114,9 +118,7 @@ function Board:checkPossibleMatches()
         end
     end
 
-    if not hasMatch then
-        self:initializeBoard()
-    end
+    return hasMatch
 end
 
 function Board:calculateMatches()
@@ -318,6 +320,9 @@ function Board:getFallingTiles()
                 local color = math.random(#gFrames['tiles'])
                 local variety = 0
 
+                -- Tile has a 5 % chance to be shiny
+                local shiny = math.random(20) == 1
+
                 -- add a new variety at each level, until level 6
                 if self.level == 1 then
                     variety = 1
@@ -325,7 +330,7 @@ function Board:getFallingTiles()
                     variety = math.random(1, self.level > 6 and 6 or self.level)
                 end
 
-                local newTile = Tile(x, y, color, variety)
+                local newTile = Tile(x, y, color, variety, shiny)
                 newTile.y = -32
                 self.tiles[y][x] = newTile
 

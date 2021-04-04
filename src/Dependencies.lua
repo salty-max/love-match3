@@ -32,7 +32,9 @@ require 'src/states/PlayState'
 require 'src/states/GameOverState'
 
 gSounds = {
-    ['music'] = love.audio.newSource('sounds/music3.mp3', 'static'),
+    ['music1'] = love.audio.newSource('sounds/music1.mp3', 'static'),
+    ['music2'] = love.audio.newSource('sounds/music2.mp3', 'static'),
+    ['music3'] = love.audio.newSource('sounds/music3.mp3', 'static'),
     ['select'] = love.audio.newSource('sounds/select.wav', 'static'),
     ['error'] = love.audio.newSource('sounds/error.wav', 'static'),
     ['match'] = love.audio.newSource('sounds/match.wav', 'static'),
