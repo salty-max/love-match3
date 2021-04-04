@@ -133,6 +133,11 @@ function PlayState:calculateMatches()
             self.score = self.score + #match * 50
         end
 
+        -- add time for each match
+        for k, match in pairs(matches) do
+            self.timer = self.timer + #match
+        end
+
         -- remove matched tiles
         self.board:removeMatches()
 
