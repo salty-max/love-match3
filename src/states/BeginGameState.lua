@@ -16,6 +16,7 @@ end
 
 function BeginGameState:enter(params)
     self.level = params.level
+    self.score = params.score
 
     Timer.tween(1, {
         [self] = { transitionAlpha = 0 }
@@ -29,7 +30,8 @@ function BeginGameState:enter(params)
                 }):finish(function()
                     gStateMachine:change('play', {
                         level = self.level,
-                        board = self.board
+                        board = self.board,
+                        score = self.score
                     })
                 end)
             end)

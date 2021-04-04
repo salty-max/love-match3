@@ -154,6 +154,63 @@ function Board:calculateMatches()
     return #self.matches > 0 and self.matches or false
 end
 
+function Board:getFallingTiles()
+    local tweens = {}
+
+    for x = 1, 8 do
+        local space = false
+        local spaceY = 0
+
+        local y = 8
+        while y >= 1 do
+            -- if last tile was a space
+            local tile = self.tiles[y][x]
+
+            if space then
+                if tile then
+                    self.tiles[spaceY][x] = tile
+                    tile.gridY = spaceY
+
+                    self.tiles[y][x] = nil
+
+                    tweens[tile] = { y = (tile.gridY - 1) * 32 }
+
+                    -- set y to spaceY to start back from here
+                    space = false
+                    y = spaceY
+
+                    -- reset to 0 to know 
+                    spaceY = 0
+                end
+            elseif tile == nil then
+                space = true
+
+                if spaceY == 0 then
+                    spaceY = y
+                end
+            end
+
+            y = y - 1
+        end
+    end
+
+    for x = 1, 8 do
+        for y = 8, 1, -1 do
+            local tile = self.tiles[y][x]
+
+            if not tile then
+                local newTile = Tile(x, y, math.random(16), 1)
+                newTile.y = -32
+                self.tiles[y][x] = newTile
+
+                tweens[newTile] = { y = (newTile.gridY - 1) * 32 }
+            end
+        end
+    end
+
+    return tweens
+end
+
 function Board:removeMatches()
     for k, match in pairs(self.matches) do
         for l, tile in pairs(match) do

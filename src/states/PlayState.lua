@@ -20,6 +20,7 @@ function PlayState:init()
     self.highlightedTile = nil
 
     self.timer = 60
+    self.canInput = true
 
     Timer.every(0.5, function()
         self.rectHighlighted = not self.rectHighlighted
@@ -41,59 +42,69 @@ end
 
 function PlayState:update(dt)
 
-    if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
-        -- shift highlight position to match table index
-        local x = self.boardHighlightX + 1
-        local y = self.boardHighlightY + 1
+    if self.canInput then
+        if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
+            -- shift highlight position to match table index
+            local x = self.boardHighlightX + 1
+            local y = self.boardHighlightY + 1
 
-        -- select tile
-        if not self.highlightedTile then
-            self.highlightedTile = self.board.tiles[y][x]
-        -- if on the same tile, deselect
-        elseif self.highlightedTile == self.board.tiles[y][x] then
-            self.highlightedTile = nil
-        -- if tiles are not adjacent, cancel move
-        elseif math.abs(self.highlightedTile.gridX - x) + math.abs(self.highlightedTile.gridY - y) > 1 then
-            gSounds['error']:play()
-            self.highlightedTile = nil
-        -- swap the selected tile and the tile at the cursor position
-        else
-            local tmpX = self.highlightedTile.gridX
-            local tmpY = self.highlightedTile.gridY
+            -- select tile
+            if not self.highlightedTile then
+                self.highlightedTile = self.board.tiles[y][x]
+            -- if on the same tile, deselect
+            elseif self.highlightedTile == self.board.tiles[y][x] then
+                self.highlightedTile = nil
+            -- if tiles are not adjacent, cancel move
+            elseif math.abs(self.highlightedTile.gridX - x) + math.abs(self.highlightedTile.gridY - y) > 1 then
+                gSounds['error']:play()
+                self.highlightedTile = nil
+            -- swap the selected tile and the tile at the cursor position
+            else
+                local tmpX = self.highlightedTile.gridX
+                local tmpY = self.highlightedTile.gridY
 
-            local newTile = self.board.tiles[y][x]
+                local newTile = self.board.tiles[y][x]
 
-            self.highlightedTile.gridX = newTile.gridX
-            self.highlightedTile.gridY = newTile.gridY
-            newTile.gridX = tmpX
-            newTile.gridY = tmpY
+                self.highlightedTile.gridX = newTile.gridX
+                self.highlightedTile.gridY = newTile.gridY
+                newTile.gridX = tmpX
+                newTile.gridY = tmpY
 
-            self.board.tiles[self.highlightedTile.gridY][self.highlightedTile.gridX] = self.highlightedTile
-            self.board.tiles[newTile.gridY][newTile.gridX] = newTile
+                self.board.tiles[self.highlightedTile.gridY][self.highlightedTile.gridX] = self.highlightedTile
+                self.board.tiles[newTile.gridY][newTile.gridX] = newTile
 
-            -- animate swap
-            Timer.tween(0.3, {
-                [self.highlightedTile] = { x = newTile.x, y = newTile.y },
-                [newTile] = { x = self.highlightedTile.x, y = self.highlightedTile.y },
-            }):finish(function()
-                self:calculateMatches()
-            end)
+                -- animate swap
+                Timer.tween(0.3, {
+                    [self.highlightedTile] = { x = newTile.x, y = newTile.y },
+                    [newTile] = { x = self.highlightedTile.x, y = self.highlightedTile.y },
+                }):finish(function()
+                    self:calculateMatches()
+                end)
+            end
+        end
+
+        -- cursor movement
+        if love.keyboard.wasPressed('up') then
+            self.boardHighlightY = math.max(0, self.boardHighlightY - 1)
+            gSounds['select']:play()
+        elseif love.keyboard.wasPressed('down') then
+            self.boardHighlightY = math.min(7, self.boardHighlightY + 1)
+            gSounds['select']:play()
+        elseif love.keyboard.wasPressed('left') then
+            self.boardHighlightX = math.max(0, self.boardHighlightX - 1)
+            gSounds['select']:play()
+        elseif love.keyboard.wasPressed('right') then
+            self.boardHighlightX = math.min(7, self.boardHighlightX + 1)
+            gSounds['select']:play()
         end
     end
 
-    -- cursor movement
-    if love.keyboard.wasPressed('up') then
-        self.boardHighlightY = math.max(0, self.boardHighlightY - 1)
-        gSounds['select']:play()
-    elseif love.keyboard.wasPressed('down') then
-        self.boardHighlightY = math.min(7, self.boardHighlightY + 1)
-        gSounds['select']:play()
-    elseif love.keyboard.wasPressed('left') then
-        self.boardHighlightX = math.max(0, self.boardHighlightX - 1)
-        gSounds['select']:play()
-    elseif love.keyboard.wasPressed('right') then
-        self.boardHighlightX = math.min(7, self.boardHighlightX + 1)
-        gSounds['select']:play()
+    if self.score >= self.scoreGoal then
+        gSounds['next-level']:play()
+        gStateMachine:change('begin-game', {
+            level = self.level + 1,
+            score = self.score
+        })
     end
 
     Timer.update(dt)
@@ -114,7 +125,16 @@ function PlayState:calculateMatches()
             self.score = self.score + #match * 50
         end
 
-        -- self.board:removeMatches()
+        self.board:removeMatches()
+
+        local tilesToCollapse = self.board:getFallingTiles()
+
+        Timer.tween(0.25, tilesToCollapse):finish(function()
+            self:calculateMatches()
+        end)
+
+    else
+        self.canInput = true
     end
 end
 
