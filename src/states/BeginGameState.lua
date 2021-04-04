@@ -18,6 +18,9 @@ function BeginGameState:enter(params)
     self.score = params.score
 
     self.board = Board(self.level, VIRTUAL_WIDTH / 2 - 32, 16)
+    
+    -- reset board until there is at least one possible successful swap
+    self.board:checkPossibleMatches()
 
     Timer.tween(1, {
         [self] = { transitionAlpha = 0 }

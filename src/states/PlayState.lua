@@ -61,55 +61,19 @@ function PlayState:update(dt)
                 self.highlightedTile = nil
             -- swap the selected tile and the tile at the cursor position
             else
-                -- store highlighted tile position to eventually swap back to it
-                local highlightedX = self.highlightedTile.gridX
-                local highlightedY = self.highlightedTile.gridY
-
-                local tmpX = self.highlightedTile.gridX
-                local tmpY = self.highlightedTile.gridY
-
                 local newTile = self.board.tiles[y][x]
 
-                self.highlightedTile.gridX = newTile.gridX
-                self.highlightedTile.gridY = newTile.gridY
-                newTile.gridX = tmpX
-                newTile.gridY = tmpY
-
-                self.board.tiles[self.highlightedTile.gridY][self.highlightedTile.gridX] = self.highlightedTile
-                self.board.tiles[newTile.gridY][newTile.gridX] = newTile
-
-                -- animate swap
-                Timer.tween(0.3, {
-                    [self.highlightedTile] = { x = newTile.x, y = newTile.y },
-                    [newTile] = { x = self.highlightedTile.x, y = self.highlightedTile.y },
-                }):finish(function()
+                self.board:swapTiles(self.highlightedTile, newTile, true, function()
                     if not self.board:calculateMatches() then
-                        -- revert swap
-                        local tmpX = highlightedX
-                        local tmpY = highlightedY
-
-                        local newTile = self.board.tiles[y][x]
-                        local previousTile = self.board.tiles[highlightedY][highlightedX]
-
-                        previousTile.gridX = newTile.gridX
-                        previousTile.gridY = newTile.gridY
-                        newTile.gridX = tmpX
-                        newTile.gridY = tmpY
-
-                        self.board.tiles[previousTile.gridY][previousTile.gridX] = previousTile
-                        self.board.tiles[newTile.gridY][newTile.gridX] = newTile
-
-                        -- animate swap
-                        Timer.tween(0.3, {
-                            [previousTile] = { x = newTile.x, y = newTile.y },
-                            [newTile] = { x = previousTile.x, y = previousTile.y },
-                        }):finish(function()
-                            self.highlightedTile = nil
-                        end)
+                        gSounds['error']:play()
+                        self.board:swapTiles(newTile, self.board.tiles[y][x], true)
+                        self.highlightedTile = nil
+                    else
+                        self:calculateMatches()
                     end
-
-                    self:calculateMatches()
                 end)
+
+                self.board:checkPossibleMatches()
             end
         end
 
@@ -157,6 +121,14 @@ function PlayState:calculateMatches()
             end
         end
 
+        if self.score >= self.scoreGoal then
+            gSounds['next-level']:play()
+            gStateMachine:change('begin-game', {
+                level = self.level + 1,
+                score = 0
+            })
+        end
+
         -- add time for each match
         for k, match in pairs(matches) do
             self.timer = self.timer + #match
@@ -170,16 +142,7 @@ function PlayState:calculateMatches()
 
         -- animate the fall of tiles
         Timer.tween(0.25, tilesToCollapse):finish(function()
-            -- call this function recursively to check matches again
             self:calculateMatches()
-
-            if self.score >= self.scoreGoal then
-                gSounds['next-level']:play()
-                gStateMachine:change('begin-game', {
-                    level = self.level + 1,
-                    score = 0
-                })
-            end
         end)
 
     else

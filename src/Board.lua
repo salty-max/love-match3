@@ -27,7 +27,7 @@ function Board:initializeBoard()
         table.insert(self.tiles, {})
 
         for x = 1, 8 do
-            local color = math.random(8)
+            local color = math.random(#gFrames['tiles'])
             local variety = 0
 
             -- add a new variety at each level, until level 6
@@ -53,6 +53,68 @@ function Board:initializeBoard()
 
     -- reinitialize board until there is no matches at startup
     while self:calculateMatches() do
+        self:initializeBoard()
+    end
+end
+
+function Board:swapTiles(selectedTile, newTile, tween, callback)
+    local tmpX = selectedTile.gridX
+    local tmpY = selectedTile.gridY
+
+    selectedTile.gridX = newTile.gridX
+    selectedTile.gridY = newTile.gridY
+    newTile.gridX = tmpX
+    newTile.gridY = tmpY
+
+    self.tiles[selectedTile.gridY][selectedTile.gridX] = selectedTile
+    self.tiles[newTile.gridY][newTile.gridX] = newTile
+
+    if tween then
+        -- animate swap
+        Timer.tween(0.3, {
+            [selectedTile] = { x = newTile.x, y = newTile.y },
+            [newTile] = { x = selectedTile.x, y = selectedTile.y },
+        }):finish(callback)
+    end
+end
+
+function Board:checkPossibleMatches()
+    local hasMatch = false
+
+    for y = 1, 8 do
+        for x = 1, 8 do
+            local tile = self.tiles[y][x]
+            -- if tile to swap is not off grid
+            if x + 1 <= 8 then
+                local rightTile = self.tiles[y][x + 1]
+                -- swap tiles
+                self:swapTiles(tile, rightTile)
+                hasMatch = self:calculateMatches()
+                -- unswap tiles
+                self:swapTiles(tile, rightTile)
+            end
+            if x - 1 >= 1 then
+                local leftTile = self.tiles[y][x - 1]
+                self:swapTiles(tile, leftTile)
+                hasMatch = self:calculateMatches()
+                self:swapTiles(tile, leftTile)
+            end
+            if y + 1 <= 8 then
+                local downTile = self.tiles[y + 1][x]
+                self:swapTiles(tile, downTile)
+                hasMatch = self:calculateMatches()
+                self:swapTiles(tile, downTile)
+            end
+            if y - 1 >= 1 then
+                local upTile = self.tiles[y - 1][x]
+                self:swapTiles(tile, upTile)
+                hasMatch = self:calculateMatches()
+                self:swapTiles(tile, upTile)
+            end
+        end
+    end
+
+    if not hasMatch then
         self:initializeBoard()
     end
 end
@@ -253,7 +315,7 @@ function Board:getFallingTiles()
             local tile = self.tiles[y][x]
 
             if not tile then
-                local color = math.random(8)
+                local color = math.random(#gFrames['tiles'])
                 local variety = 0
 
                 -- add a new variety at each level, until level 6
