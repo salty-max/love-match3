@@ -58,6 +58,7 @@ function Board:initializeBoard()
 end
 
 function Board:swapTiles(selectedTile, newTile, tween, callback)
+    -- invert selected tile and new tile grid positions
     local tmpX = selectedTile.gridX
     local tmpY = selectedTile.gridY
 
@@ -69,12 +70,13 @@ function Board:swapTiles(selectedTile, newTile, tween, callback)
     self.tiles[selectedTile.gridY][selectedTile.gridX] = selectedTile
     self.tiles[newTile.gridY][newTile.gridX] = newTile
 
+    -- tween is optional (not relevant for checking possible matches)
     if tween then
         -- animate swap
         Timer.tween(0.3, {
             [selectedTile] = { x = newTile.x, y = newTile.y },
             [newTile] = { x = selectedTile.x, y = selectedTile.y },
-        }):finish(callback)
+        }):finish(callback) -- trigger callback passed as a parameter
     end
 end
 

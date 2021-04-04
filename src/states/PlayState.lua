@@ -62,6 +62,7 @@ function PlayState:update(dt)
             gSounds['select']:play()
         end
 
+        -- get mouse grid position on click and set the cursor to the clicked tile
         if love.mouse.wasClicked(1) then
             local mousePos = self:getMouseGridPos()
             if mousePos then
@@ -90,11 +91,13 @@ function PlayState:update(dt)
                 local newTile = self.board.tiles[y][x]
 
                 self.board:swapTiles(self.highlightedTile, newTile, true, function()
+                    -- if the swap doesn't trigger a match, unswap
                     if not self.board:calculateMatches() then
                         gSounds['error']:play()
                         self.board:swapTiles(newTile, self.board.tiles[y][x], true)
                         self.highlightedTile = nil
                     else
+                        -- trigger match
                         self:calculateMatches()
                     end
                 end)
@@ -147,6 +150,8 @@ function PlayState:calculateMatches()
         end)
 
     else
+
+        -- if goal is reached, wait for 2 seconds or launch next level
         if self.score >= self.scoreGoal then
             gSounds['next-level']:play()
             self.waitForNextLevel = true
@@ -158,6 +163,7 @@ function PlayState:calculateMatches()
                 })
             end)
         else
+            -- wait 2 seconds and reset board if no possible match
              if not self.board:checkPossibleMatches() then
                 self.waitForReset = true
                 Timer.after(2, function()
@@ -165,17 +171,24 @@ function PlayState:calculateMatches()
                     self.waitForReset = false
                 end)
             end
+
             self.canInput = true
         end
     end
 end
 
 function PlayState:getMouseGridPos()
+    -- convert mouse position to virtual position
     local mouseX, mouseY = Push:toGame(love.mouse.getPosition())
+    -- align mouse position to grid
     mouseX = mouseX - self.board.x
     mouseY = mouseY - self.board.y
+
+    -- convert mouse position to tile position (0-indexed)
     mouseX = math.floor(mouseX / 32)
     mouseY = math.floor(mouseY / 32)
+
+    -- return only if mouse position is in the grid
     if mouseX >= 0 and mouseY >= 0 and mouseX <= 7 and mouseY <= 7 then
         return {
             ['x'] = mouseX,
