@@ -37,12 +37,16 @@ function Board:initializeBoard()
                 variety = math.random(1, self.level > 6 and 6 or self.level)
             end
 
+            -- Tile has a 5 % chance to be shiny
+            local shiny = math.random(20) == 1
+
             table.insert(self.tiles[y], Tile(
                 -- coordinates are 0-based, so subtract one from index
                 x, -- add board X offset to tile X
                 y, -- add board Y offset to tile Y
                 color,
-                variety
+                variety,
+                shiny
             ))
         end
     end
@@ -62,6 +66,7 @@ function Board:calculateMatches()
         -- store first tile color
         local colorToMatch = self.tiles[y][1].color
         colorMatchCount = 1
+        local eraseEntireLine = false
 
         -- go through every tile in the row
         for x = 2, 8 do
@@ -75,9 +80,18 @@ function Board:calculateMatches()
                 -- check if before this tile there was a match
                 if colorMatchCount >= 3 then
                     local match = {}
+
                     -- go backwards to store every tile in the match
                     for x2 = x - 1, x - colorMatchCount, -1 do
-                        table.insert(match, self.tiles[y][x2])
+                        -- if the tile is shiny, match the entire line and break the loop
+                        -- because it's useless to check any other tile
+                        if self.tiles[y][x2].shiny then
+                            -- empty match before filling it with the entire line
+                            match = self.tiles[y]
+                            break
+                        else
+                            table.insert(match, self.tiles[y][x2])
+                        end
                     end
 
                     -- add the match to the matches table
@@ -86,6 +100,10 @@ function Board:calculateMatches()
 
                 -- reset counter
                 colorMatchCount = 1
+
+                if eraseEntireLine then
+                    break
+                end
 
                 -- no need to check for matches on the last column
                 if x >= 7 then
@@ -100,7 +118,12 @@ function Board:calculateMatches()
             
             -- go backwards from end of last row by colorMatchCount
             for x = 8, 8 - colorMatchCount + 1, -1 do
-                table.insert(match, self.tiles[y][x])
+                -- if one the matching tiles is shiny match the entire line
+                if self.tiles[y][x].shiny then
+                    match = self.tiles[y]
+                else
+                    table.insert(match, self.tiles[y][x])
+                end
             end
 
             table.insert(matches, match)
@@ -126,9 +149,21 @@ function Board:calculateMatches()
                 -- check if before this tile there was a match
                 if colorMatchCount >= 3 then
                     local match = {}
+
                     -- go backwards to store every tile in the match
                     for y2 = y - 1, y - colorMatchCount, -1 do
-                        table.insert(match, self.tiles[y2][x])
+                        -- if the tile is shiny, match the entire line and break the loop
+                        -- because it's useless to check any other tile
+                        if self.tiles[y2][x].shiny then
+                            -- empty match before filling it with the entire line
+                            match = {}
+                            for y3 = 1, 8 do
+                                table.insert(match, self.tiles[y3][x])
+                            end
+                            break
+                        else
+                            table.insert(match, self.tiles[y2][x])
+                        end
                     end
 
                     -- add the match to the matches table
@@ -151,7 +186,17 @@ function Board:calculateMatches()
             
             -- go backwards from end of last row by matchNum
             for y = 8, 8 - colorMatchCount + 1, -1 do
-                table.insert(match, self.tiles[y][x])
+                -- if one the matching tiles is shiny match the entire line
+                if self.tiles[y][x].shiny then
+                     -- empty match before filling it with the entire line
+                    match = {}
+                    for x2 = 1, 8 do
+                        table.insert(match, self.tiles[y][x2])
+                    end
+                    break
+                else
+                    table.insert(match, self.tiles[y][x])
+                end
             end
 
             table.insert(matches, match)
@@ -223,7 +268,13 @@ end
 function Board:removeMatches()
     for k, match in pairs(self.matches) do
         for l, tile in pairs(match) do
-            self.tiles[tile.gridY][tile.gridX] = nil
+            if tile.shiny then
+                for x = 1, 8 do
+                    self.tiles[tile.gridY][x] = nil
+                end
+            else
+                self.tiles[tile.gridY][tile.gridX] = nil
+            end
         end
     end
 

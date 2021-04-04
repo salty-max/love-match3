@@ -6,9 +6,6 @@
     https://github.com/salty-max
 --]]
 
-local boardOffsetX = VIRTUAL_WIDTH - 288
-local boardOffsetY = 16
-
 PlayState = Class{__includes = BaseState}
 
 function PlayState:init()
@@ -28,6 +25,10 @@ function PlayState:init()
 
     Timer.every(1, function()
         self.timer = self.timer - 1
+
+        if self.timer <= 10 then
+            gSounds['clock']:play()
+        end
     end)
 end
 
@@ -128,9 +129,12 @@ function PlayState:calculateMatches()
         gSounds['match']:stop()
         gSounds['match']:play()
 
-        -- add score for each match
+        -- add score for each match with varying bonus for each variety
+        print_r(matches)
         for k, match in pairs(matches) do
-            self.score = self.score + #match * 50
+            for l, tile in pairs(match) do
+                self.score = self.score + tile.score
+            end
         end
 
         -- add time for each match
@@ -146,6 +150,7 @@ function PlayState:calculateMatches()
 
         -- animate the fall of tiles
         Timer.tween(0.25, tilesToCollapse):finish(function()
+            -- call this function recursively to check matches again
             self:calculateMatches()
         end)
 
@@ -161,7 +166,7 @@ function PlayState:render()
     if self.highlightedTile then
         love.graphics.setBlendMode('add')
         love.graphics.setColor(1, 1, 1, 96/255)
-        love.graphics.rectangle('fill', self.highlightedTile.x + boardOffsetX, self.highlightedTile.y + boardOffsetY, 32, 32, 4)
+        love.graphics.rectangle('fill', self.highlightedTile.x + BOARD_OFFSET_X, self.highlightedTile.y + BOARD_OFFSET_Y, 32, 32, 4)
         love.graphics.setBlendMode('alpha')
     end
 
@@ -172,7 +177,7 @@ function PlayState:render()
     else
         love.graphics.setColor(172/255, 50/255, 50/255, 1)
     end
-    love.graphics.rectangle('line', self.boardHighlightX * 32 + boardOffsetX, self.boardHighlightY * 32 + boardOffsetY, 32, 32, 4)
+    love.graphics.rectangle('line', self.boardHighlightX * 32 + BOARD_OFFSET_X, self.boardHighlightY * 32 + BOARD_OFFSET_Y, 32, 32, 4)
 
     -- GUI
     love.graphics.setColor(56/255, 56/255, 56/255, 234/255)
