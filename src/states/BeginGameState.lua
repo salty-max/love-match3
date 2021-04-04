@@ -20,9 +20,10 @@ function BeginGameState:enter(params)
 
     self.board = Board(self.level, VIRTUAL_WIDTH / 2 - 32, 16)
 
-    gSounds['music' .. tostring(self.music)]:stop()
-    gSounds['music' .. tostring(math.random(3))]:setLooping(true)
-    gSounds['music' .. tostring(math.random(3))]:play()
+    self.music:stop()
+    self.music = gSounds['music' .. tostring(math.random(3))]
+    self.music:setLooping(true)
+    self.music:play()
 
     Timer.tween(1, {
         [self] = { transitionAlpha = 0 }
@@ -37,7 +38,8 @@ function BeginGameState:enter(params)
                     gStateMachine:change('play', {
                         level = self.level,
                         board = self.board,
-                        score = self.score
+                        score = self.score,
+                        music = self.music
                     })
                 end)
             end)

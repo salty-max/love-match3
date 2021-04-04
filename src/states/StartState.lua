@@ -81,7 +81,7 @@ function StartState:update(dt)
                 }):finish(function()
                     gStateMachine:change('begin-game', {
                         level = 1,
-                        music = 3
+                        music = gSounds['music3']
                     })
 
                     -- remove color timer
