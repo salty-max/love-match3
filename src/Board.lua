@@ -8,9 +8,10 @@
 
 Board = Class{}
 
-function Board:init(x, y)
+function Board:init(level, x, y)
     self.x = x
     self.y = y
+    self.level = level
 
     self.matches = {}
 
@@ -28,6 +29,14 @@ function Board:initializeBoard()
         for x = 1, 8 do
             local color = math.random(18)
             local variety = 1
+
+            -- add a new variety at each level, until level 6
+            if self.level == 1 then
+                variety = 1
+            else
+                variety = math.random(1, self.level > 6 and 6 or self.level)
+            end
+
             table.insert(self.tiles[y], Tile(
                 -- coordinates are 0-based, so subtract one from index
                 x, -- add board X offset to tile X

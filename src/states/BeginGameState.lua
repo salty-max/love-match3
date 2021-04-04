@@ -11,12 +11,13 @@ BeginGameState = Class{__includes = BaseState}
 function BeginGameState:init()
     self.transitionAlpha = 1
     self.levelLabelY = -64
-    self.board = Board(VIRTUAL_WIDTH / 2 - 32, 16)
 end
 
 function BeginGameState:enter(params)
     self.level = params.level
     self.score = params.score
+
+    self.board = Board(self.level, VIRTUAL_WIDTH / 2 - 32, 16)
 
     Timer.tween(1, {
         [self] = { transitionAlpha = 0 }

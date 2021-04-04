@@ -33,7 +33,7 @@ end
 
 function PlayState:enter(params)
     self.level = params.level
-    self.board = params.board or Board(VIRTUAL_WIDTH / 2 - 32, 16)
+    self.board = params.board or Board(self.level, VIRTUAL_WIDTH / 2 - 32, 16)
     self.score = params.score or 0
 
     -- score to reach to get to the next level
