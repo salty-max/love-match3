@@ -19,6 +19,7 @@ function PlayState:init()
     self.timer = 60
     self.canInput = true
     self.waitForReset = false
+    self.waitForNextLevel = false
 
     Timer.every(0.5, function()
         self.rectHighlighted = not self.rectHighlighted
@@ -148,7 +149,8 @@ function PlayState:calculateMatches()
     else
         if self.score >= self.scoreGoal then
             gSounds['next-level']:play()
-            Timer.after(1, function()
+            self.waitForNextLevel = true
+            Timer.after(2, function()
                 gStateMachine:change('begin-game', {
                     level = self.level + 1,
                     score = 0,
@@ -220,6 +222,15 @@ function PlayState:render()
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.setFont(gFonts['medium'])
         love.graphics.printf('No possible match!', BOARD_OFFSET_X + 40, VIRTUAL_HEIGHT / 2 - 16, 176, 'center')
+    end
+
+    if self.waitForNextLevel then
+        love.graphics.setColor(56/255, 56/255, 56/255, 234/255)
+        love.graphics.rectangle('fill', BOARD_OFFSET_X + 32, VIRTUAL_HEIGHT / 2 - 32, 192, 48, 4)
+
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setFont(gFonts['medium'])
+        love.graphics.printf('Level complete!', BOARD_OFFSET_X + 40, VIRTUAL_HEIGHT / 2 - 16, 176, 'center')
     end
 
     love.graphics.print(self.boardHighlightX, 5, 5)
