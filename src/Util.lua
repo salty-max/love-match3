@@ -18,16 +18,18 @@ function GenerateTileQuads(atlas)
 
     -- 9 rows
     for row = 1, 9 do
-        --two sets of 6 tiles per row
-        for i = 1, 2 do
-            tiles[counter] = {}
+        if row % 2 == 0 then
+            --two sets of 6 tiles per row
+            for i = 1, 2 do
+                tiles[counter] = {}
 
-            for col = 1, 6 do
-                table.insert(tiles[counter], love.graphics.newQuad(x, y, 32, 32, atlas:getDimensions()))
-                x = x + 32 -- tile width is 32
+                for col = 1, 6 do
+                    table.insert(tiles[counter], love.graphics.newQuad(x, y, 32, 32, atlas:getDimensions()))
+                    x = x + 32 -- tile width is 32
+                end
+
+                counter = counter + 1
             end
-
-            counter = counter + 1
         end
 
         y = y + 32 -- tile height is 32

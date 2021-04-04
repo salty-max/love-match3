@@ -23,7 +23,7 @@ function PlayState:init()
         self.rectHighlighted = not self.rectHighlighted
     end)
 
-    Timer.every(1, function()
+    self.countdownTimer = Timer.every(1, function()
         self.timer = self.timer - 1
 
         if self.timer <= 10 then
@@ -100,14 +100,6 @@ function PlayState:update(dt)
         end
     end
 
-    if self.score >= self.scoreGoal then
-        gSounds['next-level']:play()
-        gStateMachine:change('begin-game', {
-            level = self.level + 1,
-            score = self.score
-        })
-    end
-
     if self.timer <= 0 then
         gSounds['game-over']:play()
         gStateMachine:change('game-over', {
@@ -130,7 +122,6 @@ function PlayState:calculateMatches()
         gSounds['match']:play()
 
         -- add score for each match with varying bonus for each variety
-        print_r(matches)
         for k, match in pairs(matches) do
             for l, tile in pairs(match) do
                 self.score = self.score + tile.score
@@ -155,6 +146,14 @@ function PlayState:calculateMatches()
         end)
 
     else
+        if self.score >= self.scoreGoal then
+            gSounds['next-level']:play()
+            gStateMachine:change('begin-game', {
+                level = self.level + 1,
+                score = 0
+            })
+        end
+
         self.canInput = true
     end
 end
@@ -189,5 +188,8 @@ function PlayState:render()
     love.graphics.printf('Score: ' .. tostring(self.score), 24, 48, 178, 'center')
     love.graphics.printf('Goal: ' .. tostring(self.scoreGoal), 24, 72, 178, 'center')
     love.graphics.printf('Time left: ' .. tostring(self.timer), 24, 96, 178, 'center')
+end
 
+function PlayState:exit()
+    self.countdownTimer:remove()
 end

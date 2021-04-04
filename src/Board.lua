@@ -27,8 +27,8 @@ function Board:initializeBoard()
         table.insert(self.tiles, {})
 
         for x = 1, 8 do
-            local color = math.random(18)
-            local variety = 1
+            local color = math.random(8)
+            local variety = 0
 
             -- add a new variety at each level, until level 6
             if self.level == 1 then
@@ -253,7 +253,17 @@ function Board:getFallingTiles()
             local tile = self.tiles[y][x]
 
             if not tile then
-                local newTile = Tile(x, y, math.random(16), 1)
+                local color = math.random(8)
+                local variety = 0
+
+                -- add a new variety at each level, until level 6
+                if self.level == 1 then
+                    variety = 1
+                else
+                    variety = math.random(1, self.level > 6 and 6 or self.level)
+                end
+
+                local newTile = Tile(x, y, color, variety)
                 newTile.y = -32
                 self.tiles[y][x] = newTile
 
