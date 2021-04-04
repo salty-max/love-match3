@@ -121,17 +121,6 @@ function PlayState:calculateMatches()
             end
         end
 
-        if self.score >= self.scoreGoal then
-            gSounds['next-level']:play()
-            Timer.after(1, function()
-                gStateMachine:change('begin-game', {
-                    level = self.level + 1,
-                    score = 0,
-                    music = self.music
-                })
-            end)
-        end
-
         -- add time for each match
         for k, match in pairs(matches) do
             self.timer = self.timer + #match
@@ -149,14 +138,25 @@ function PlayState:calculateMatches()
         end)
 
     else
-        if not self.board:checkPossibleMatches() then
-            self.waitForReset = true
-            Timer.after(2, function()
-                self.board:initializeBoard()
-                self.waitForReset = false
+        if self.score >= self.scoreGoal then
+            gSounds['next-level']:play()
+            Timer.after(1, function()
+                gStateMachine:change('begin-game', {
+                    level = self.level + 1,
+                    score = 0,
+                    music = self.music
+                })
             end)
+        else
+             if not self.board:checkPossibleMatches() then
+                self.waitForReset = true
+                Timer.after(2, function()
+                    self.board:initializeBoard()
+                    self.waitForReset = false
+                end)
+            end
+            self.canInput = true
         end
-        self.canInput = true
     end
 end
 
