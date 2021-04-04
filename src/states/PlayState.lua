@@ -6,6 +6,9 @@
     https://github.com/salty-max
 --]]
 
+local boardOffsetX = VIRTUAL_WIDTH - 288
+local boardOffsetY = 16
+
 PlayState = Class{__includes = BaseState}
 
 function PlayState:init()
@@ -31,6 +34,9 @@ function PlayState:enter(params)
     self.level = params.level
     self.board = params.board or Board(VIRTUAL_WIDTH / 2 - 32, 16)
     self.score = params.score or 0
+
+    -- score to reach to get to the next level
+    self.scoreGoal = self.level * 1.25 * 1000
 end
 
 function PlayState:update(dt)
@@ -70,8 +76,7 @@ function PlayState:update(dt)
                 [self.highlightedTile] = { x = newTile.x, y = newTile.y },
                 [newTile] = { x = self.highlightedTile.x, y = self.highlightedTile.y },
             }):finish(function()
-                -- reset selection
-                self.highlightedTile = nil
+                self:calculateMatches()
             end)
         end
     end
@@ -94,6 +99,25 @@ function PlayState:update(dt)
     Timer.update(dt)
 end
 
+function PlayState:calculateMatches()
+    -- reset selection
+    self.highlightedTile = nil
+
+    local matches = self.board:calculateMatches()
+
+    if matches then
+        gSounds['match']:stop()
+        gSounds['match']:play()
+
+        -- add score for each match
+        for k, match in pairs(matches) do
+            self.score = self.score + #match * 50
+        end
+
+        -- self.board:removeMatches()
+    end
+end
+
 function PlayState:render()
     self.board:render()
 
@@ -101,7 +125,7 @@ function PlayState:render()
     if self.highlightedTile then
         love.graphics.setBlendMode('add')
         love.graphics.setColor(1, 1, 1, 96/255)
-        love.graphics.rectangle('fill', self.highlightedTile.x + (VIRTUAL_WIDTH - 288), self.highlightedTile.y + 16, 32, 32, 4)
+        love.graphics.rectangle('fill', self.highlightedTile.x + boardOffsetX, self.highlightedTile.y + boardOffsetY, 32, 32, 4)
         love.graphics.setBlendMode('alpha')
     end
 
@@ -112,7 +136,7 @@ function PlayState:render()
     else
         love.graphics.setColor(172/255, 50/255, 50/255, 1)
     end
-    love.graphics.rectangle('line', self.boardHighlightX * 32 + (VIRTUAL_WIDTH - 288), self.boardHighlightY * 32 + 16, 32, 32, 4)
+    love.graphics.rectangle('line', self.boardHighlightX * 32 + boardOffsetX, self.boardHighlightY * 32 + boardOffsetY, 32, 32, 4)
 
     -- GUI
     love.graphics.setColor(56/255, 56/255, 56/255, 234/255)
@@ -122,6 +146,7 @@ function PlayState:render()
     love.graphics.setFont(gFonts['medium'])
     love.graphics.printf('Level: ' .. tostring(self.level), 24, 24, 178, 'center')
     love.graphics.printf('Score: ' .. tostring(self.score), 24, 48, 178, 'center')
-    love.graphics.printf('Time left: ' .. tostring(self.timer), 24, 72, 178, 'center')
+    love.graphics.printf('Goal: ' .. tostring(self.scoreGoal), 24, 72, 178, 'center')
+    love.graphics.printf('Time left: ' .. tostring(self.timer), 24, 96, 178, 'center')
 
 end
