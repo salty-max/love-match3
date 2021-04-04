@@ -190,14 +190,14 @@ function PlayState:render()
     love.graphics.printf('Score: ' .. tostring(self.score), 24, 48, 178, 'center')
     love.graphics.printf('Goal: ' .. tostring(self.scoreGoal), 24, 72, 178, 'center')
     love.graphics.printf('Time left: ' .. tostring(self.timer), 24, 96, 178, 'center')
-
+    
     if self.waitForReset then
         love.graphics.setColor(56/255, 56/255, 56/255, 234/255)
-        love.graphics.rectangle('fill', BOARD_OFFSET_X + 16, VIRTUAL_HEIGHT / 2 - 24, 186, 48, 4)
+        love.graphics.rectangle('fill', BOARD_OFFSET_X + 32, VIRTUAL_HEIGHT / 2 - 32, 192, 48, 4)
 
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.setFont(gFonts['medium'])
-        love.graphics.printf('No possible match!', BOARD_OFFSET_X + 8, VIRTUAL_HEIGHT / 2, 178, 'center')
+        love.graphics.printf('No possible match!', BOARD_OFFSET_X + 40, VIRTUAL_HEIGHT / 2 - 16, 176, 'center')
     end
 end
 
