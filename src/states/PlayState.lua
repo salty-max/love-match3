@@ -61,6 +61,10 @@ function PlayState:update(dt)
                 self.highlightedTile = nil
             -- swap the selected tile and the tile at the cursor position
             else
+                -- store highlighted tile position to eventually swap back to it
+                local highlightedX = self.highlightedTile.gridX
+                local highlightedY = self.highlightedTile.gridY
+
                 local tmpX = self.highlightedTile.gridX
                 local tmpY = self.highlightedTile.gridY
 
@@ -79,6 +83,31 @@ function PlayState:update(dt)
                     [self.highlightedTile] = { x = newTile.x, y = newTile.y },
                     [newTile] = { x = self.highlightedTile.x, y = self.highlightedTile.y },
                 }):finish(function()
+                    if not self.board:calculateMatches() then
+                        -- revert swap
+                        local tmpX = highlightedX
+                        local tmpY = highlightedY
+
+                        local newTile = self.board.tiles[y][x]
+                        local previousTile = self.board.tiles[highlightedY][highlightedX]
+
+                        previousTile.gridX = newTile.gridX
+                        previousTile.gridY = newTile.gridY
+                        newTile.gridX = tmpX
+                        newTile.gridY = tmpY
+
+                        self.board.tiles[previousTile.gridY][previousTile.gridX] = previousTile
+                        self.board.tiles[newTile.gridY][newTile.gridX] = newTile
+
+                        -- animate swap
+                        Timer.tween(0.3, {
+                            [previousTile] = { x = newTile.x, y = newTile.y },
+                            [newTile] = { x = previousTile.x, y = previousTile.y },
+                        }):finish(function()
+                            self.highlightedTile = nil
+                        end)
+                    end
+
                     self:calculateMatches()
                 end)
             end
@@ -111,13 +140,13 @@ function PlayState:update(dt)
 end
 
 function PlayState:calculateMatches()
-    -- reset selection
-    self.highlightedTile = nil
-
-    -- computre matches
+    
+    -- compute matches
     local matches = self.board:calculateMatches()
-
+    
     if matches then
+        -- reset selection
+        self.highlightedTile = nil
         gSounds['match']:stop()
         gSounds['match']:play()
 
@@ -143,17 +172,17 @@ function PlayState:calculateMatches()
         Timer.tween(0.25, tilesToCollapse):finish(function()
             -- call this function recursively to check matches again
             self:calculateMatches()
+
+            if self.score >= self.scoreGoal then
+                gSounds['next-level']:play()
+                gStateMachine:change('begin-game', {
+                    level = self.level + 1,
+                    score = 0
+                })
+            end
         end)
 
     else
-        if self.score >= self.scoreGoal then
-            gSounds['next-level']:play()
-            gStateMachine:change('begin-game', {
-                level = self.level + 1,
-                score = 0
-            })
-        end
-
         self.canInput = true
     end
 end
@@ -190,6 +219,7 @@ function PlayState:render()
     love.graphics.printf('Time left: ' .. tostring(self.timer), 24, 96, 178, 'center')
 end
 
+-- remove timer to avoid wierd behavior with alarm sound
 function PlayState:exit()
     self.countdownTimer:remove()
 end
