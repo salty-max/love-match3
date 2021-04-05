@@ -81,46 +81,59 @@ function Board:swapTiles(selectedTile, newTile, tween, callback)
 end
 
 function Board:checkPossibleMatches()
-    local hasMatch = false
 
     for y = 1, 8 do
-        if hasMatch then break end
-
-        for x = 1, 8 do
-            if hasMatch then break end
-            
+        for x = 1, 8 do            
             local tile = self.tiles[y][x]
             -- if tile to swap is not off grid
             if x + 1 <= 8 then
                 local rightTile = self.tiles[y][x + 1]
                 -- swap tiles
                 self:swapTiles(tile, rightTile)
-                hasMatch = self:calculateMatches()
-                -- unswap tiles
-                self:swapTiles(tile, rightTile)
+
+                if not self:calculateMatches() then
+                    -- unswap tiles
+                    self:swapTiles(rightTile, tile)
+                else
+                    -- unswap tiles
+                    self:swapTiles(rightTile, tile)
+                    return true
+                end
             end
             if x - 1 >= 1 then
                 local leftTile = self.tiles[y][x - 1]
                 self:swapTiles(tile, leftTile)
-                hasMatch = self:calculateMatches()
-                self:swapTiles(tile, leftTile)
+                if not self:calculateMatches() then
+                    self:swapTiles(leftTile, tile)
+                else
+                    self:swapTiles(leftTile, tile)
+                    return true
+                end
             end
             if y + 1 <= 8 then
                 local downTile = self.tiles[y + 1][x]
                 self:swapTiles(tile, downTile)
-                hasMatch = self:calculateMatches()
-                self:swapTiles(tile, downTile)
+                if not self:calculateMatches() then
+                    self:swapTiles(downTile, tile)
+                else
+                    self:swapTiles(downTile, tile)
+                    return true
+                end
             end
             if y - 1 >= 1 then
                 local upTile = self.tiles[y - 1][x]
                 self:swapTiles(tile, upTile)
-                hasMatch = self:calculateMatches()
-                self:swapTiles(tile, upTile)
+                if not self:calculateMatches() then
+                    self:swapTiles(upTile, tile)
+                else
+                    self:swapTiles(upTile, tile)
+                    return true
+                end
             end
         end
     end
 
-    return hasMatch
+    return false
 end
 
 function Board:calculateMatches()

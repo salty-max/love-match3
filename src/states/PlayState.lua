@@ -17,6 +17,7 @@ function PlayState:init()
     self.highlightedTile = nil
 
     self.timer = 60
+
     self.canInput = true
     self.waitForReset = false
     self.waitForNextLevel = false
@@ -41,7 +42,7 @@ function PlayState:enter(params)
     self.music = params.music
 
     -- score to reach to get to the next level
-    self.scoreGoal = self.level * 2 * 1000
+    self.scoreGoal = params.scoreGoal
 end
 
 function PlayState:update(dt)
@@ -119,6 +120,7 @@ function PlayState:calculateMatches()
     
     -- compute matches
     local matches = self.board:calculateMatches()
+    local collapseTween = nil
     
     if matches then
         -- reset selection
@@ -145,7 +147,7 @@ function PlayState:calculateMatches()
         local tilesToCollapse = self.board:getFallingTiles()
 
         -- animate the fall of tiles
-        Timer.tween(0.25, tilesToCollapse):finish(function()
+        collapseTween = Timer.tween(0.25, tilesToCollapse):finish(function()
             self:calculateMatches()
         end)
 
@@ -158,21 +160,22 @@ function PlayState:calculateMatches()
             Timer.after(2, function()
                 gStateMachine:change('begin-game', {
                     level = self.level + 1,
-                    score = 0,
-                    music = self.music
+                    music = self.music,
+                    score = self.score,
+                    scoreGoal = self.scoreGoal
                 })
             end)
         else
             -- wait 2 seconds and reset board if no possible match
-             if not self.board:checkPossibleMatches() then
+            if not self.board:checkPossibleMatches() then
                 self.waitForReset = true
                 Timer.after(2, function()
                     self.board:initializeBoard()
                     self.waitForReset = false
                 end)
+            else
+                self.canInput = true
             end
-
-            self.canInput = true
         end
     end
 end
@@ -245,9 +248,6 @@ function PlayState:render()
         love.graphics.setFont(gFonts['medium'])
         love.graphics.printf('Level complete!', BOARD_OFFSET_X + 40, VIRTUAL_HEIGHT / 2 - 16, 176, 'center')
     end
-
-    love.graphics.print(self.boardHighlightX, 5, 5)
-    love.graphics.print(self.boardHighlightY, 5, 20)
 end
 
 -- remove timer to avoid wierd behavior with alarm sound

@@ -16,6 +16,7 @@ end
 function BeginGameState:enter(params)
     self.level = params.level
     self.score = params.score
+    self.scoreGoal = params.scoreGoal or 0
     self.music = params.music
 
     self.board = Board(self.level, VIRTUAL_WIDTH / 2 - 32, 16)
@@ -39,6 +40,7 @@ function BeginGameState:enter(params)
                         level = self.level,
                         board = self.board,
                         score = self.score,
+                        scoreGoal = self.scoreGoal + ((self.level * 2) * 1000),
                         music = self.music
                     })
                 end)
